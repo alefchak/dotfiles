@@ -1,0 +1,6 @@
+# Fix VTE configuration
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+    . /etc/profile.d/vte.sh
+fi
+
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"

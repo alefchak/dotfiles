@@ -1,0 +1,52 @@
+export SSE_BUILD_STORAGE_DIR=$DEV_DIR/storage
+export ENV_DIR=$DEV_DIR/dev-env
+
+function switch_dev_env {
+    if [[ "$#" -ne 2 ]]; then
+        echo "Usage: switch_dev_env <clear-env-file> <target-env-file>"
+        return 1
+    fi
+
+    local clear_env="$1"
+    local target_env="$2"
+    [[ -f $clear_env ]] && . $clear_env || { echo "Warning: $(realpath $clear_env) not found" ; }
+    [[ -f $target_env ]] && . $target_env  || { echo "Error: $(realpath $target_env) not found"; return 1; }
+}
+
+function build_env { 
+    switch_dev_env $ENV_DIR/clear.env $ENV_DIR/$1/ansible.env
+    cd $DEV_DIR/build
+    deactivate > /dev/null 2>&1
+    source ansible-venv/bin/activate
+    alias ap='ansible-playbook ${USER_VAULT_FILE:+-e @$USER_VAULT_FILE} ${INVENTORY_VAULT_FILE:+-e @$INVENTORY_VAULT_FILE}'
+}
+
+alias godev='build_env dev'
+alias gosse='build_env sse'
+alias goclear='switch_dev_env $ENV_DIR/clear.env $ENV_DIR/clear.env'
+
+alias cdbuild='cdrepos && cd buildgeneration'
+
+function build {
+    buildtype=${1:-full}
+    cdbuild
+    mvn -DbuildPackageFormat=dir -Pbuild-$buildtype clean package
+    version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec 2>/dev/null)
+    ln -sfn $(pwd)/build/target/build-$version-$buildtype $DEV_DIR/build
+    $DEV_DIR/build/setup_virtualenv.sh
+}
+
+function netshoot {
+    namespace=${1:-default}
+    kubectl -n $namespace run --generator=run-pod/v1 tmp-shell --rm -i --tty --image docker-ng-proxy.ms.northgrum.com/nicolaka/netshoot -- /bin/bash
+}
+
+function update-all-hosts {
+    echo "Updating all packages using inventory: $1"
+    ansible -i $1 -m package -a "name=* state=latest" --become -e @$VAULT_FILE all
+}
+
+alias trivy='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -e http_proxy=$https_proxy -e https_proxy=$https_proxy -e no_proxy=$no_proxy -e TRIVY_INSECURE=true aquasec/trivy'
+
+export NVM_DIR=$REPOS_DIR/nvm
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"

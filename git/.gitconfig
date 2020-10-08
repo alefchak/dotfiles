@@ -1,0 +1,31 @@
+[user]
+	name = Andrew Lefchak
+	email = alefchak@gmail.com
+[alias]
+	ls = log --graph --decorate --abbrev-commit --pretty=format:'%C(bold blue)%h%Creset -%C(auto)%d%Creset %C(white)%s%Creset %C(green)(%cr) %C(bold yellow)<%an>%Creset' --all
+	co = checkout
+	ec = config --global -e
+	up = !git pull --rebase --prune $@
+[push]
+	default = simple
+[pull]
+	rebase = true
+[branch]
+	autosetuprebase = always
+[core]
+	autocrlf = input
+	eol = lf
+	excludesfile = ~/.gitignore
+	editor = code --wait
+[merge]
+	tool = vscode
+[diff]
+	tool = vscode
+[difftool]
+	prompt = false
+[mergetool "vscode"]
+	cmd = code --wait $MERGED
+[difftool "vscode"]
+	cmd = code --wait --diff $LOCAL $REMOTE
+[include]
+	path = ~/.gitconfig-override

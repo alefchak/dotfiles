@@ -1,0 +1,40 @@
+# OS specific
+case "$OSTYPE" in
+    linux*)
+        alias e='gio open .'
+        ;;
+    msys*)
+        alias e='explorer .'
+        ;;
+    darwin*)
+        alias e='open .'
+        ;;
+    *)
+        ;;
+esac
+
+# Enable aliases to be used with sudo
+alias sudo='sudo '
+
+alias cd..='cd ..'
+alias ..='cd ..'
+alias ...='cd ../../'
+alias ....='cd ../../../'
+alias grep='grep --color=auto'
+
+# Detect which `ls` flavor is in use
+if ls --color > /dev/null 2>&1; then
+	colorflag="--color"
+else
+	colorflag="-G"
+fi
+alias ls='ls ${colorflag}'
+alias ll='ls -alh ${colorflag}'
+
+### ENVIRONMENT ###
+export PATH=$(python3 -m site --user-base)/bin:$PATH
+export DEV_DIR=$HOME/dev
+export REPOS_DIR=$DEV_DIR/repos
+
+alias cddev='cd $DEV_DIR'
+alias cdrepos='cd $REPOS_DIR'

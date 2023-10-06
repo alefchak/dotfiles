@@ -19,4 +19,4 @@ alias pullall='find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} pul
 alias pa='pullall'
 alias others='git ls-files --others'
 alias gcall='find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} gc \;'
-alias comall='find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} co master \;'
+alias comall='find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} co main \;'

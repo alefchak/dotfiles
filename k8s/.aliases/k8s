@@ -1,4 +1,8 @@
 alias k='kubectl'
+alias kcl='kubectl config get-contexts'
+alias kcu='kubectl config use-context'
+alias kgetfailed='kubectl get pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
+alias kdeletefailed='kubectl delete pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 
 function kgetall {
   for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events.events.k8s.io" | grep -v "events" | sort | uniq); do

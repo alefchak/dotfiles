@@ -31,3 +31,5 @@
 	path = ~/.gitconfig-override
 [init]
 	defaultBranch = main
+[gui]
+	spellingdictionary = none

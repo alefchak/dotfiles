@@ -16,11 +16,3 @@ unset file
   source $file
 done
 unset file
-
-# Powerline
-if [[ -f $(which powerline-daemon 2>/dev/null) ]]; then
-	powerline-daemon -q
-	POWERLINE_BASH_CONTINUATION=1
-	POWERLINE_BASH_SELECT=1
-	. $(python -m site --user-site)/powerline/bindings/bash/powerline.sh
-fi

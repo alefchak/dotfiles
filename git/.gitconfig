@@ -8,6 +8,7 @@
 	up = !git pull --rebase --prune $@
 [push]
 	default = simple
+	autoSetupRemote = true
 [pull]
 	rebase = true
 [branch]

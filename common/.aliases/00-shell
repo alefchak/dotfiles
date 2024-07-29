@@ -32,6 +32,7 @@ alias ls='ls ${colorflag}'
 alias ll='ls -alh ${colorflag}'
 
 ### ENVIRONMENT ###
+export PATH=$HOME/.local/bin:$PATH
 export DEV_DIR=$HOME/dev
 export REPOS_DIR=$DEV_DIR/repos
 

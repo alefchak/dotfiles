@@ -1,0 +1,3 @@
+command -v flux >/dev/null 2>&1 && {
+    source <(flux completion bash)
+}

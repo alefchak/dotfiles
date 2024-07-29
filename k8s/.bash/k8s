@@ -1,2 +1,4 @@
-source <(kubectl completion bash)
-complete -F __start_kubectl k
+command -v kubectl >/dev/null 2>&1 && {
+    source <(kubectl completion bash)
+    complete -F __start_kubectl k
+}

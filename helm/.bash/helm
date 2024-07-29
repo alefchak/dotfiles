@@ -1,1 +1,3 @@
-source <(helm completion bash)
+command -v helm >/dev/null 2>&1 && {
+    source <(helm completion bash)
+}

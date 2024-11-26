@@ -16,3 +16,5 @@ unset file
   source $file
 done
 unset file
+
+shopt -s checkwinsize

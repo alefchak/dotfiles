@@ -1,0 +1,3 @@
+command -v k9s >/dev/null 2>&1 && {
+    source <(k9s completion bash)
+}

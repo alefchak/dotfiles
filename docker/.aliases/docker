@@ -2,6 +2,6 @@ alias dc='docker compose'
 alias dcupd='docker compose up -d'
 alias dclogs='docker compose logs -f'
 
-function dbash { docker exec -i -t $1 /bin/bash || docker exec -i -t $1 /bin/ash ; }
+function dbash { docker exec -i -t "$1" sh -c 'command -v bash >/dev/null && exec bash || exec sh' ; }
 function dvbackup { docker run --rm -v $1:/volume alpine tar czf - -C /volume . > "$1.tar.gz" ; }
 function dvrestore { docker run -i --rm -v $(basename "$1" .tar.gz):/volume alpine tar xzf - -C /volume < "$1" ; }

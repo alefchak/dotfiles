@@ -5,8 +5,9 @@ alias kgetfailed='kubectl get pods --field-selector="status.phase!=Succeeded,sta
 alias kdeletefailed='kubectl delete pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 
 function kgetall {
-  for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events.events.k8s.io" | grep -v "events" | sort | uniq); do
-    echo "Resource:" $i
-    kubectl -n ${1} get --ignore-not-found ${i} --sort-by=.metadata.creationTimestamp
+  [ -n "$1" ] || { echo "usage: kgetall <namespace>" >&2; return 1; }
+  for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events" | sort -u); do
+    echo "Resource: $i"
+    kubectl -n "$1" get --ignore-not-found "$i" --sort-by=.metadata.creationTimestamp
   done
 }

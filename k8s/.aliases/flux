@@ -4,3 +4,27 @@ alias fgh='flux get helmreleases -A'
 alias frk='flux reconcile kustomization --with-source'
 alias frh='flux reconcile helmrelease --with-source'
 alias frs='flux reconcile source git'
+
+# Reconcile a kustomization and everything beneath it, parents first
+function frtree {
+  local root=${1:-flux-system} rootns=${2:-flux-system} kind name ns count=0 failed=""
+  command -v jq >/dev/null 2>&1 || { echo "frtree: jq is required" >&2; return 1; }
+  flux reconcile kustomization "$root" -n "$rootns" --with-source || return 1
+  while read -r kind name ns; do
+    if [ "$kind" = helmrelease ]; then
+      flux reconcile helmrelease "$name" -n "$ns" --with-source
+    else
+      flux reconcile kustomization "$name" -n "$ns"
+    fi || failed="$failed"$'\n'"  $kind $ns/$name"
+    count=$((count + 1))
+  done < <(flux tree kustomization "$root" -n "$rootns" --compact -o json | jq -r '
+    [.. | .resource? | select(.GroupKind.Kind == "Kustomization" or .GroupKind.Kind == "HelmRelease")]
+    | .[1:][]
+    | [(.GroupKind.Kind | ascii_downcase), .Name, .Namespace]
+    | @tsv')
+  if [ -n "$failed" ]; then
+    echo "frtree: some of the $count resources under $root failed:$failed" >&2
+    return 1
+  fi
+  echo "frtree: reconciled $root and $count resources under it"
+}

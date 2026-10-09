@@ -1,10 +1,40 @@
 command -v flux >/dev/null 2>&1 && {
     eval "$(flux completion bash)"
+
+    # Shared by frtree and fra. Completes -n/--namespace and its value (returns 0), otherwise
+    # sets ns, npos (positional words before the cursor) and first (the first positional) and returns 1.
+    function _flux_line {
+        local i w prev=${COMP_WORDS[COMP_CWORD-1]}
+        [[ $prev == = ]] && prev=${COMP_WORDS[COMP_CWORD-2]}
+        if [[ $prev == -n || $prev == --namespace ]]; then
+            COMPREPLY=($(compgen -W "$(_kube_namespaces)" -- "${cur#=}")); return 0
+        elif [[ $cur == -* ]]; then
+            COMPREPLY=($(compgen -W "-n --namespace" -- "$cur")); return 0
+        fi
+        for ((i = 1; i < ${#COMP_WORDS[@]}; i++)); do
+            w=${COMP_WORDS[i]}
+            case $w in
+                -n|--namespace) ((i++)); [[ ${COMP_WORDS[i]} == = ]] && ((i++)); ns=${COMP_WORDS[i]} ;;
+                -*) ;;
+                *) if ((i < COMP_CWORD)); then ((npos++)); [[ -z $first ]] && first=$w; fi ;;
+            esac
+        done
+        return 1
+    }
     function _frtree {
-        case $COMP_CWORD in
-            1) COMPREPLY=($(compgen -W "$(_frtree_candidates)" -- "${COMP_WORDS[1]}")) ;;
-            2) COMPREPLY=($(compgen -W "$(_frtree_candidates "${COMP_WORDS[1]}")" -- "${COMP_WORDS[2]}")) ;;
+        local cur=${COMP_WORDS[COMP_CWORD]} ns=flux-system npos=0 first=""
+        _flux_line && return
+        ((npos == 0)) && COMPREPLY=($(compgen -W "$(_flux_names kustomizations.kustomize.toolkit.fluxcd.io "$ns")" -- "$cur"))
+    }
+    function _fra {
+        local cur=${COMP_WORDS[COMP_CWORD]} ns=flux-system npos=0 first="" resource=kustomizations.kustomize.toolkit.fluxcd.io
+        _flux_line && return
+        [[ $first == h* ]] && resource=helmreleases.helm.toolkit.fluxcd.io
+        case $npos in
+            0) COMPREPLY=($(compgen -W "helmrelease kustomization" -- "$cur")) ;;
+            1) COMPREPLY=($(compgen -W "$(_flux_names $resource "$ns")" -- "$cur")) ;;
         esac
     }
     complete -F _frtree frtree
+    complete -F _fra fra
 }

@@ -7,7 +7,17 @@ alias frs='flux reconcile source git'
 
 # Reconcile a kustomization and everything beneath it, parents first
 function frtree {
-  local root=${1:-flux-system} rootns=${2:-flux-system} kind name ns count=0 failed=""
+  local root=flux-system rootns=flux-system kind name ns count=0 failed="" usage="usage: frtree [kustomization] [-n namespace]"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -n|--namespace) rootns=$2; shift ;;
+      --namespace=*) rootns=${1#*=} ;;
+      -*) echo "$usage" >&2; return 1 ;;
+      *) root=$1 ;;
+    esac
+    [ $# -gt 0 ] && shift
+  done
+  [ -n "$rootns" ] || { echo "$usage" >&2; return 1; }
   command -v jq >/dev/null 2>&1 || { echo "frtree: jq is required" >&2; return 1; }
   flux reconcile kustomization "$root" -n "$rootns" --with-source || return 1
   while read -r kind name ns; do
@@ -29,8 +39,55 @@ function frtree {
   echo "frtree: reconciled $root and $count resources under it"
 }
 
-# Candidates for frtree's arguments: kustomization names, or the namespaces holding the given name
-function _frtree_candidates {
-  kubectl get kustomizations.kustomize.toolkit.fluxcd.io -A --no-headers -o custom-columns=:metadata.namespace,:metadata.name 2>/dev/null |
-    awk -v name="$1" 'name == "" { print $2 } $2 == name { print $1 }' | sort -u
+# Reconcile the chain of kustomizations that own a helmrelease or kustomization, root first, then the target
+function fra {
+  local kind="" name="" ns=flux-system chain flag last count=0 usage="usage: fra helmrelease|kustomization <name> [-n namespace]"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -n|--namespace) ns=$2; shift ;;
+      --namespace=*) ns=${1#*=} ;;
+      -*) echo "$usage" >&2; return 1 ;;
+      *) if [ -z "$kind" ]; then kind=$1; elif [ -z "$name" ]; then name=$1; else echo "$usage" >&2; return 1; fi ;;
+    esac
+    [ $# -gt 0 ] && shift
+  done
+  case "$kind" in
+    hr|helmrelease) kind=HelmRelease ;;
+    ks|kustomization) kind=Kustomization ;;
+    *) kind="" ;;
+  esac
+  [ -n "$kind" ] && [ -n "$name" ] && [ -n "$ns" ] || { echo "$usage" >&2; return 1; }
+  command -v jq >/dev/null 2>&1 || { echo "fra: jq is required" >&2; return 1; }
+  chain=$(kubectl get kustomizations.kustomize.toolkit.fluxcd.io,helmreleases.helm.toolkit.fluxcd.io -A -o json |
+    jq -r --arg start "$kind/$ns/$name" '
+      def key: "\(.kind)/\(.metadata.namespace)/\(.metadata.name)";
+      def owner: .metadata.labels // {}
+        | if .["kustomize.toolkit.fluxcd.io/name"]
+          then "Kustomization/\(.["kustomize.toolkit.fluxcd.io/namespace"])/\(.["kustomize.toolkit.fluxcd.io/name"])"
+          else null end;
+      (.items | map({key: key, value: .}) | from_entries) as $all
+      | if $all[$start] then . else "fra: \($start) not found\n" | halt_error end
+      # follow the owner labels up, root first; stop at the root (which owns itself), a missing owner or a cycle
+      | def parent: .[0] as $k | $all[$k] | owner;
+        [$start] | until(parent as $o | $o == null or $all[$o] == null or any(.[]; . == $o); [parent] + .)
+      | map($all[.])
+      # a kustomization gets --with-source only the first time its source appears in the chain
+      | reduce .[] as $o ({seen: [], rows: []};
+          if $o.kind == "HelmRelease" then
+            .rows += [["helmrelease", $o.metadata.name, $o.metadata.namespace, "--with-source"]]
+          else
+            ($o.spec.sourceRef | "\(.kind)/\(.namespace // $o.metadata.namespace)/\(.name)") as $src
+            | .rows += [["kustomization", $o.metadata.name, $o.metadata.namespace]
+                        + (if any(.seen[]; . == $src) then [] else ["--with-source"] end)]
+            | .seen += [$src]
+          end)
+      | .rows[] | @tsv') || return 1
+  while read -r kind name ns flag; do
+    flux reconcile "$kind" "$name" -n "$ns" $flag || { echo "fra: stopped at $kind $ns/$name" >&2; return 1; }
+    count=$((count + 1)); last="$kind $ns/$name"
+  done <<< "$chain"
+  echo "fra: reconciled $count resources, ending with $last"
 }
+
+# Names of a flux resource type in one namespace, for completion
+function _flux_names { kubectl get "$1" -n "$2" --no-headers -o custom-columns=:metadata.name 2>/dev/null ; }

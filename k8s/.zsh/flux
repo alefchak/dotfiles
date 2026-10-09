@@ -1,10 +1,23 @@
 command -v flux >/dev/null 2>&1 && {
     source <(flux completion zsh)
+
     function _frtree {
-        case $CURRENT in
-            2) compadd -- ${(f)"$(_frtree_candidates)"} ;;
-            3) compadd -- ${(f)"$(_frtree_candidates $words[2])"} ;;
+        local context state state_descr line; typeset -A opt_args
+        _arguments '(-n --namespace)'{-n+,--namespace=}'[namespace]:namespace:->namespace' '1:kustomization:->name'
+        case $state in
+            namespace) compadd -- ${(f)"$(_kube_namespaces)"} ;;
+            name) compadd -- ${(f)"$(_flux_names kustomizations.kustomize.toolkit.fluxcd.io ${opt_args[-n]:-${opt_args[--namespace]:-flux-system}})"} ;;
+        esac
+    }
+    function _fra {
+        local context state state_descr line resource=kustomizations.kustomize.toolkit.fluxcd.io; typeset -A opt_args
+        _arguments '(-n --namespace)'{-n+,--namespace=}'[namespace]:namespace:->namespace' '1:kind:(helmrelease kustomization)' '2:name:->name'
+        [[ $line[1] == h* ]] && resource=helmreleases.helm.toolkit.fluxcd.io
+        case $state in
+            namespace) compadd -- ${(f)"$(_kube_namespaces)"} ;;
+            name) compadd -- ${(f)"$(_flux_names $resource ${opt_args[-n]:-${opt_args[--namespace]:-flux-system}})"} ;;
         esac
     }
     compdef _frtree frtree
+    compdef _fra fra
 }

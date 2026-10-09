@@ -6,6 +6,7 @@
 	co = checkout
 	ec = config --global -e
 	up = !git pull --rebase --prune
+	gone = "!git for-each-ref --format='%(if:equals=[gone])%(upstream:track)%(then)%(refname:short)%(end)' refs/heads | grep . | while read -r b; do git branch -D \"$b\"; done"
 [push]
 	default = simple
 	autoSetupRemote = true

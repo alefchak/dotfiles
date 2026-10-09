@@ -1,5 +1,7 @@
 command -v docker >/dev/null 2>&1 && {
     source <(docker completion zsh)
     function _dbash { compadd -- ${(f)"$(docker ps --format '{{.Names}}' 2>/dev/null)"} ; }
+    function _dvbackup { compadd -- ${(f)"$(docker volume ls --format '{{.Name}}' 2>/dev/null)"} ; }
     compdef _dbash dbash
+    compdef _dvbackup dvbackup
 }

@@ -43,5 +43,6 @@
 	defaultBranch = main
 [gui]
 	spellingdictionary = none
+# Machine-specific settings; see git/.gitconfig-override.example in the dotfiles repo.
 [include]
 	path = ~/.gitconfig-override

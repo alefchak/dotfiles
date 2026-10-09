@@ -1,0 +1,8 @@
+# Copy to ~/.gitconfig-override and uncomment what this machine needs.
+
+# HTTPS with a token from the keyring.
+# Needs: dnf install git-credential-libsecret
+#[url "https://git.example.com/"]
+#	insteadOf = git@git.example.com:
+#[credential "https://git.example.com"]
+#	helper = libsecret

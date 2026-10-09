@@ -1,5 +1,5 @@
 command -v flux >/dev/null 2>&1 && {
-    source <(flux completion bash)
+    eval "$(flux completion bash)"
 
     # Complete a flux alias as the command it expands to
     function _flux_alias {

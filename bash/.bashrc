@@ -7,6 +7,22 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# History: large, written as you go, de-duplicated, timestamped
+HISTSIZE=100000
+HISTFILESIZE=100000
+HISTCONTROL=ignorespace:erasedups
+HISTTIMEFORMAT='%F %T '
+shopt -s histappend histverify
+[[ $PROMPT_COMMAND == *"history -a"* ]] || PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+
+# Up/Down search history for commands starting with what is already typed
+if [[ $- == *i* ]]; then
+  bind '"\e[A": history-search-backward'
+  bind '"\eOA": history-search-backward'
+  bind '"\e[B": history-search-forward'
+  bind '"\eOB": history-search-forward'
+fi
+
 for file in "$HOME"/.aliases/* "$HOME"/.bash/*; do
   [[ -f "$file" ]] && source "$file"
 done

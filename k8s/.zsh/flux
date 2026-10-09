@@ -1,3 +1,10 @@
 command -v flux >/dev/null 2>&1 && {
     source <(flux completion zsh)
+    function _frtree {
+        case $CURRENT in
+            2) compadd -- ${(f)"$(_frtree_candidates)"} ;;
+            3) compadd -- ${(f)"$(_frtree_candidates $words[2])"} ;;
+        esac
+    }
+    compdef _frtree frtree
 }

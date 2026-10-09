@@ -1,3 +1,5 @@
 command -v kubectl >/dev/null 2>&1 && {
     source <(kubectl completion zsh)
+    function _kgetall { (( CURRENT == 2 )) && compadd -- ${(f)"$(_kube_namespaces)"} ; }
+    compdef _kgetall kgetall
 }

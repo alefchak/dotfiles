@@ -1,3 +1,10 @@
 command -v flux >/dev/null 2>&1 && {
     eval "$(flux completion bash)"
+    function _frtree {
+        case $COMP_CWORD in
+            1) COMPREPLY=($(compgen -W "$(_frtree_candidates)" -- "${COMP_WORDS[1]}")) ;;
+            2) COMPREPLY=($(compgen -W "$(_frtree_candidates "${COMP_WORDS[1]}")" -- "${COMP_WORDS[2]}")) ;;
+        esac
+    }
+    complete -F _frtree frtree
 }

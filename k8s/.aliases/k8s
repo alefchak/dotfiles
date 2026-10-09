@@ -4,6 +4,9 @@ alias kcu='kubectl config use-context'
 alias kgetfailed='kubectl get pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 alias kdeletefailed='kubectl delete pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 
+# Namespace names, for completion
+function _kube_namespaces { kubectl get namespaces --no-headers -o custom-columns=:metadata.name 2>/dev/null ; }
+
 function kgetall {
   [ -n "$1" ] || { echo "usage: kgetall <namespace>" >&2; return 1; }
   for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events" | sort -u); do

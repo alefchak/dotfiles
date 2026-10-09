@@ -28,3 +28,9 @@ function frtree {
   fi
   echo "frtree: reconciled $root and $count resources under it"
 }
+
+# Candidates for frtree's arguments: kustomization names, or the namespaces holding the given name
+function _frtree_candidates {
+  kubectl get kustomizations.kustomize.toolkit.fluxcd.io -A --no-headers -o custom-columns=:metadata.namespace,:metadata.name 2>/dev/null |
+    awk -v name="$1" 'name == "" { print $2 } $2 == name { print $1 }' | sort -u
+}

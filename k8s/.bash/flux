@@ -1,3 +1,16 @@
 command -v flux >/dev/null 2>&1 && {
     source <(flux completion bash)
+
+    # Complete a flux alias as the command it expands to
+    function _flux_alias {
+        local name=${COMP_WORDS[0]}
+        local expansion=${BASH_ALIASES[$name]}
+        local -a head=($expansion)
+        COMP_LINE=$expansion${COMP_LINE#"$name"}
+        COMP_POINT=$(( COMP_POINT + ${#expansion} - ${#name} ))
+        COMP_CWORD=$(( COMP_CWORD + ${#head[@]} - 1 ))
+        COMP_WORDS=("${head[@]}" "${COMP_WORDS[@]:1}")
+        __start_flux
+    }
+    complete -o default -F _flux_alias fga fgk fgh frk frh frs
 }

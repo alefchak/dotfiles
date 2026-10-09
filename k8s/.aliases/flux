@@ -1,0 +1,6 @@
+alias fga='flux get all -A'
+alias fgk='flux get kustomizations -A'
+alias fgh='flux get helmreleases -A'
+alias frk='flux reconcile kustomization --with-source'
+alias frh='flux reconcile helmrelease --with-source'
+alias frs='flux reconcile source git'

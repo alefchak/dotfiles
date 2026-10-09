@@ -1,0 +1,7 @@
+# tf runs OpenTofu when it is installed, Terraform otherwise
+if command -v tofu >/dev/null 2>&1; then
+    alias tf='tofu'
+else
+    alias tf='terraform'
+fi
+alias tg='terragrunt'

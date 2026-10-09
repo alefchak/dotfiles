@@ -8,30 +8,40 @@
 	up = !git pull --rebase --prune
 	gone = "!git for-each-ref --format='%(if:equals=[gone])%(upstream:track)%(then)%(refname:short)%(end)' refs/heads | grep . | while read -r b; do git branch -D \"$b\"; done"
 [push]
-	default = simple
 	autoSetupRemote = true
 [pull]
 	rebase = true
+[fetch]
+	prune = true
+[rebase]
+	autoStash = true
+[rerere]
+	enabled = true
 [branch]
-	autosetuprebase = always
+	sort = -committerdate
+[commit]
+	verbose = true
 [core]
 	autocrlf = input
-	eol = lf
 	excludesfile = ~/.gitignore
 	editor = code --wait
 [merge]
 	tool = vscode
+	conflictStyle = zdiff3
 [diff]
 	tool = vscode
+	algorithm = histogram
 [difftool]
 	prompt = false
+[mergetool]
+	keepBackup = false
 [mergetool "vscode"]
-	cmd = code --wait $MERGED
+	cmd = code --wait --merge $REMOTE $LOCAL $BASE $MERGED
 [difftool "vscode"]
 	cmd = code --wait --diff $LOCAL $REMOTE
-[include]
-	path = ~/.gitconfig-override
 [init]
 	defaultBranch = main
 [gui]
 	spellingdictionary = none
+[include]
+	path = ~/.gitconfig-override

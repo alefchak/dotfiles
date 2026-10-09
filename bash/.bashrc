@@ -7,13 +7,8 @@ if ! shopt -oq posix; then
   fi
 fi
 
-[[ -e "$HOME/.aliases" ]] && for file in $HOME/.aliases/*; do
-  source $file
-done
-unset file
-
-[[ -e "$HOME/.bash" ]] && for file in $HOME/.bash/*; do
-  source $file
+for file in "$HOME"/.aliases/* "$HOME"/.bash/*; do
+  [[ -f "$file" ]] && source "$file"
 done
 unset file
 

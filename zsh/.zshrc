@@ -5,12 +5,7 @@ compinit
 setopt noautomenu
 setopt nomenucomplete
 
-[[ -e "$HOME/.aliases" ]] && for file in $HOME/.aliases/*; do
-  source $file
-done
-unset file
-
-[[ -e "$HOME/.zsh" ]] && for file in $HOME/.zsh/*; do
-  source $file
+for file in "$HOME"/.aliases/*(N-.) "$HOME"/.zsh/*(N-.); do
+  source "$file"
 done
 unset file

@@ -4,4 +4,5 @@ command -v docker >/dev/null 2>&1 && {
     function _dvbackup { compadd -- ${(f)"$(docker volume ls --format '{{.Name}}' 2>/dev/null)"} ; }
     compdef _dbash dbash
     compdef _dvbackup dvbackup
+    compdef "_files -g '*.tar.gz'" dvrestore
 }

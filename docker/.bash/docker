@@ -4,4 +4,5 @@ command -v docker >/dev/null 2>&1 && {
     function _dvbackup { COMPREPLY=($(compgen -W "$(docker volume ls --format '{{.Name}}' 2>/dev/null)" -- "${COMP_WORDS[COMP_CWORD]}")) ; }
     complete -F _dbash dbash
     complete -F _dvbackup dvbackup
+    complete -o plusdirs -f -X '!*.tar.gz' dvrestore
 }

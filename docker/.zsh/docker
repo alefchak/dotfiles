@@ -1,1 +1,5 @@
-compdef _docker dbash=_docker_complete_running_containers
+command -v docker >/dev/null 2>&1 && {
+    source <(docker completion zsh)
+    function _dbash { compadd -- ${(f)"$(docker ps --format '{{.Names}}' 2>/dev/null)"} ; }
+    compdef _dbash dbash
+}

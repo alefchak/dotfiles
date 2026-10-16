@@ -1,0 +1,5 @@
+command -v aws >/dev/null 2>&1 && {
+    command -v aws_completer >/dev/null 2>&1 && complete -C aws_completer aws
+    function _awsp { [[ $COMP_CWORD -eq 1 ]] && COMPREPLY=($(compgen -W "$(_aws_profiles)" -- "${COMP_WORDS[1]}")) ; }
+    complete -F _awsp awsp
+}

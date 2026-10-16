@@ -35,7 +35,7 @@ function _complete_alias {
   local name=${COMP_WORDS[0]}
   local expansion=${BASH_ALIASES[$name]}
   local -a head=($expansion)
-  local cmd=${head[0]} spec func
+  local cmd=${head[0]} spec func prog
   if ! spec=$(complete -p "$cmd" 2>/dev/null); then
     # bash-completion loads most completions on first use
     if declare -F _comp_load >/dev/null; then _comp_load "$cmd"
@@ -43,14 +43,28 @@ function _complete_alias {
     fi
     spec=$(complete -p "$cmd" 2>/dev/null)
   fi
-  [[ $spec == *" -F "* ]] || return
-  func=${spec#* -F }; func=${func%% *}
+  # A completion function (-F) or an external completer command (-C), as aws and terraform use
+  if [[ $spec == *" -F "* ]]; then
+    func=${spec#* -F }; func=${func%% *}
+  elif [[ $spec == *" -C "* ]]; then
+    # -C is printed last, before the command name; newer bash single-quotes it when needed
+    prog=${spec#* -C }; prog=${prog% "$cmd"}
+    [[ $prog == \'*\' ]] && eval "prog=$prog"
+  else
+    return
+  fi
   [[ $spec == *"-o nospace"* ]] && compopt -o nospace
   COMP_LINE=$expansion${COMP_LINE#"$name"}
   COMP_POINT=$(( COMP_POINT + ${#expansion} - ${#name} ))
   COMP_CWORD=$(( COMP_CWORD + ${#head[@]} - 1 ))
   COMP_WORDS=("${head[@]}" "${COMP_WORDS[@]:1}")
-  "$func" "$cmd" "${COMP_WORDS[COMP_CWORD]}" "${COMP_WORDS[COMP_CWORD-1]}"
+  if [[ -n $func ]]; then
+    "$func" "$cmd" "${COMP_WORDS[COMP_CWORD]}" "${COMP_WORDS[COMP_CWORD-1]}"
+  else
+    # A completer reads the line from its environment and prints one candidate per line
+    mapfile -t COMPREPLY < <(COMP_LINE=$COMP_LINE COMP_POINT=$COMP_POINT \
+      "$prog" "$cmd" "${COMP_WORDS[COMP_CWORD]}" "${COMP_WORDS[COMP_CWORD-1]}")
+  fi
 }
 if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
   for name in "${!BASH_ALIASES[@]}"; do

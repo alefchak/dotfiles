@@ -1,0 +1,8 @@
+command -v aws >/dev/null 2>&1 && {
+    if command -v aws_completer >/dev/null 2>&1; then
+        autoload -U +X bashcompinit && bashcompinit
+        complete -C aws_completer aws
+    fi
+    function _awsp { (( CURRENT == 2 )) && compadd -- ${(f)"$(_aws_profiles)"} ; }
+    compdef _awsp awsp
+}

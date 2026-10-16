@@ -2,7 +2,7 @@ alias fga='flux get all -A'
 alias fgk='flux get kustomizations -A'
 alias fgh='flux get helmreleases -A'
 alias frk='flux reconcile kustomization --with-source'
-alias frh='flux reconcile helmrelease --with-source'
+alias frh='flux reconcile helmrelease --with-source --force'
 alias frs='flux reconcile source git'
 
 # Reconcile a kustomization and everything beneath it, parents first
@@ -41,7 +41,7 @@ function frtree {
 
 # Reconcile the chain of kustomizations that own a helmrelease or kustomization, root first, then the target
 function fra {
-  local kind="" name="" ns=flux-system chain flag last count=0 usage="usage: fra helmrelease|kustomization <name> [-n namespace]"
+  local kind="" name="" ns=flux-system chain flag force last count=0 usage="usage: fra helmrelease|kustomization <name> [-n namespace]"
   while [ $# -gt 0 ]; do
     case "$1" in
       -n|--namespace) ns=$2; shift ;;
@@ -71,10 +71,11 @@ function fra {
       | def parent: .[0] as $k | $all[$k] | owner;
         [$start] | until(parent as $o | $o == null or $all[$o] == null or any(.[]; . == $o); [parent] + .)
       | map($all[.])
-      # a kustomization gets --with-source only the first time its source appears in the chain
+      # a kustomization gets --with-source only the first time its source appears in the chain;
+      # a helmrelease can only be the target, which is forced
       | reduce .[] as $o ({seen: [], rows: []};
           if $o.kind == "HelmRelease" then
-            .rows += [["helmrelease", $o.metadata.name, $o.metadata.namespace, "--with-source"]]
+            .rows += [["helmrelease", $o.metadata.name, $o.metadata.namespace, "--with-source", "--force"]]
           else
             ($o.spec.sourceRef | "\(.kind)/\(.namespace // $o.metadata.namespace)/\(.name)") as $src
             | .rows += [["kustomization", $o.metadata.name, $o.metadata.namespace]
@@ -82,8 +83,8 @@ function fra {
             | .seen += [$src]
           end)
       | .rows[] | @tsv') || return 1
-  while read -r kind name ns flag; do
-    flux reconcile "$kind" "$name" -n "$ns" $flag || { echo "fra: stopped at $kind $ns/$name" >&2; return 1; }
+  while read -r kind name ns flag force; do
+    flux reconcile "$kind" "$name" -n "$ns" $flag $force || { echo "fra: stopped at $kind $ns/$name" >&2; return 1; }
     count=$((count + 1)); last="$kind $ns/$name"
   done <<< "$chain"
   echo "fra: reconciled $count resources, ending with $last"

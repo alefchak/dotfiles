@@ -5,9 +5,20 @@ alias frk='flux reconcile kustomization --with-source'
 alias frh='flux reconcile helmrelease --with-source --force'
 alias frs='flux reconcile source git'
 
-# Reconcile a kustomization and everything beneath it, parents first
+# Kustomizations and helmreleases a kustomization applied, from its inventory, as "kind name namespace" lines
+function _flux_children {
+  local json
+  json=$(kubectl get kustomizations.kustomize.toolkit.fluxcd.io "$1" -n "$2" -o json) || return 1
+  jq -r <<< "$json" '
+    .status.inventory.entries[]?.id | split("_")
+    | select(.[2:] == ["kustomize.toolkit.fluxcd.io", "Kustomization"] or .[2:] == ["helm.toolkit.fluxcd.io", "HelmRelease"])
+    | "\(.[3] | ascii_downcase) \(.[1]) \(.[0])"'
+}
+
+# Reconcile a kustomization and everything beneath it, parents first.
+# Each kustomization's children come from its inventory after it reconciles, so anything deleted is recreated before it is visited.
 function frtree {
-  local root=flux-system rootns=flux-system kind name ns count=0 failed="" usage="usage: frtree [kustomization] [-n namespace]"
+  local root=flux-system rootns=flux-system item kind name ns todo children seen nl=$'\n' count=0 failed="" usage="usage: frtree [kustomization] [-n namespace]"
   while [ $# -gt 0 ]; do
     case "$1" in
       -n|--namespace) rootns=$2; shift ;;
@@ -20,18 +31,24 @@ function frtree {
   [ -n "$rootns" ] || { echo "$usage" >&2; return 1; }
   command -v jq >/dev/null 2>&1 || { echo "frtree: jq is required" >&2; return 1; }
   flux reconcile kustomization "$root" -n "$rootns" --with-source || return 1
-  while read -r kind name ns; do
-    if [ "$kind" = helmrelease ]; then
-      flux reconcile helmrelease "$name" -n "$ns" --with-source
-    else
-      flux reconcile kustomization "$name" -n "$ns"
-    fi || failed="$failed"$'\n'"  $kind $ns/$name"
+  todo=$(_flux_children "$root" "$rootns") || return 1
+  seen=$'\n'"kustomization $root $rootns"$'\n'
+  # depth first: a kustomization's children go to the front of the list
+  while [ -n "$todo" ]; do
+    item=${todo%%$'\n'*}
+    if [ "$item" = "$todo" ]; then todo=""; else todo=${todo#*$'\n'}; fi
+    case "$seen" in *$'\n'"$item"$'\n'*) continue ;; esac
+    seen="$seen$item"$'\n'
+    read -r kind name ns <<< "$item"
     count=$((count + 1))
-  done < <(flux tree kustomization "$root" -n "$rootns" --compact -o json | jq -r '
-    [.. | .resource? | select(.GroupKind.Kind == "Kustomization" or .GroupKind.Kind == "HelmRelease")]
-    | .[1:][]
-    | [(.GroupKind.Kind | ascii_downcase), .Name, .Namespace]
-    | @tsv')
+    if [ "$kind" = helmrelease ]; then
+      flux reconcile helmrelease "$name" -n "$ns" --with-source || failed="$failed"$'\n'"  $kind $ns/$name"
+    elif flux reconcile kustomization "$name" -n "$ns" && children=$(_flux_children "$name" "$ns"); then
+      [ -n "$children" ] && todo="$children${todo:+$nl$todo}"
+    else
+      failed="$failed"$'\n'"  $kind $ns/$name (not descended into)"
+    fi
+  done
   if [ -n "$failed" ]; then
     echo "frtree: some of the $count resources under $root failed:$failed" >&2
     return 1

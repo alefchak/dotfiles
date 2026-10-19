@@ -1,8 +1,10 @@
 for cmd in terraform tofu terragrunt; do
     command -v "$cmd" >/dev/null 2>&1 && complete -o nospace -C "$cmd" "$cmd"
 done
+# Each alias completes as its target; read from `alias`, as bash 3.2 has no BASH_ALIASES
 for name in tf tg; do
-    cmd=${BASH_ALIASES[$name]}
+    cmd=$(alias "$name" 2>/dev/null) || continue
+    cmd=${cmd#*=\'}; cmd=${cmd%\'}
     command -v "$cmd" >/dev/null 2>&1 && complete -o nospace -C "$cmd" "$name"
 done
 unset cmd name

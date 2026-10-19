@@ -1,9 +1,18 @@
-alias fga='flux get all -A'
 alias fgk='flux get kustomizations -A'
 alias fgh='flux get helmreleases -A'
 alias frk='flux reconcile kustomization --with-source'
 alias frh='flux reconcile helmrelease --with-source --force'
 alias frs='flux reconcile source git'
+
+# fga [namespace] [flux get flags]: flux get all in one namespace, or in all of them
+function fga {
+  if [ -n "$1" ] && [ "${1#-}" = "$1" ]; then
+    local ns=$1; shift
+    flux get all -n "$ns" "$@"
+  else
+    flux get all -A "$@"
+  fi
+}
 
 # Kustomizations and helmreleases a kustomization applied, from its inventory, as "kind name namespace" lines
 function _flux_children {

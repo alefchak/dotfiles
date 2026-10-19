@@ -205,3 +205,27 @@ complete_bash() {
   run tab zsh 'fra helmrelease -n apps j';  assert_eq "$output" "fra helmrelease -n apps jellyfin "
   run tab zsh 'fra kustomization i';        assert_eq "$output" "fra kustomization infra "
 }
+
+# fga
+
+check_fga() {
+  sh_run "$1" 'fga; fga apps; fga --status-selector ready=false; fga apps --status-selector ready=false'
+  [ "$status" -eq 0 ]
+  assert_eq "$(grep '^flux get' "$STATE/calls.log")" "flux get all -A
+flux get all -n apps
+flux get all -A --status-selector ready=false
+flux get all -n apps --status-selector ready=false"
+}
+@test "bash: fga gets everything, in one namespace or all" { check_fga bash; }
+@test "zsh: fga gets everything, in one namespace or all" { check_fga zsh; }
+
+@test "bash: fga completes namespaces" {
+  sh_run bash 'complete -p fga; COMP_WORDS=(fga a); COMP_CWORD=1; _kube_ns_arg; echo "[${COMPREPLY[*]}]"'
+  assert_eq "$output" "complete -F _kube_ns_arg fga
+[apps]"
+}
+
+@test "zsh: Tab completes namespaces for fga" {
+  run tab zsh 'fga kube'
+  assert_eq "$output" "fga kube-system "
+}

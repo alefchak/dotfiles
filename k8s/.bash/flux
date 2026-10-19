@@ -37,4 +37,5 @@ command -v flux >/dev/null 2>&1 && {
     }
     complete -F _frtree frtree
     complete -F _fra fra
+    complete -F _kube_ns_arg fga
 }

@@ -9,7 +9,7 @@ echo "flux $*" >> "$STATE/calls.log"
 F=$STATE/flux
 
 case "$1" in
-  completion) exit 0 ;;
+  completion|get) exit 0 ;;
   reconcile) ;;
   *) echo "flux stub: unhandled: $*" >&2; exit 2 ;;
 esac

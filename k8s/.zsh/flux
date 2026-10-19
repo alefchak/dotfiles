@@ -20,4 +20,5 @@ command -v flux >/dev/null 2>&1 && {
     }
     compdef _frtree frtree
     compdef _fra fra
+    compdef _kube_ns_arg fga
 }

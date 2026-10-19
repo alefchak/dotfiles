@@ -68,3 +68,25 @@ media
 --
 --"
 }
+
+check_debug_aliases() {
+  sh_run "$1" 'kdebug web --target=app -n apps; kdebug node/worker1; knetshoot -n apps'
+  [ "$status" -eq 0 ]
+  assert_eq "$(grep -E '^kubectl (debug|run)' "$STATE/calls.log")" "kubectl debug -it --image=nicolaka/netshoot --profile=netadmin web --target=app -n apps
+kubectl debug -it --image=nicolaka/netshoot --profile=netadmin node/worker1
+kubectl run netshoot --rm -it --restart=Never --image=nicolaka/netshoot -n apps"
+}
+@test "bash: kdebug and knetshoot run netshoot" { check_debug_aliases bash; }
+@test "zsh: kdebug and knetshoot run netshoot" { check_debug_aliases zsh; }
+
+@test "bash: kdebug and knetshoot complete as kubectl" {
+  skip_unless_bash4
+  sh_run bash 'complete -p kdebug knetshoot'
+  assert_eq "$(normalize_specs "$output")" "complete -o bashdefault -o default -F _complete_alias kdebug
+complete -o bashdefault -o default -F _complete_alias knetshoot"
+}
+
+@test "zsh: Tab on kdebug completes as kubectl" {
+  run tab zsh 'kdebug ge'
+  assert_eq "$output" "kdebug get "
+}

@@ -32,6 +32,8 @@ case "$1 $2" in
     fi ;;
   "config view")   # no namespace set prints nothing, as kubectl does
     cat "$STATE/context-namespace" 2>/dev/null || true ;;
+  "debug "*|"run "*)   # logged above
+    ;;
   "config set-context")
     echo "${4#--namespace=}" > "$STATE/context-namespace" ;;
   "get "*,*)

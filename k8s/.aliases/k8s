@@ -4,6 +4,11 @@ alias kcu='kubectl config use-context'
 alias kgetfailed='kubectl get pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 alias kdeletefailed='kubectl delete pods --field-selector="status.phase!=Succeeded,status.phase!=Running"'
 
+# Debug with netshoot: kdebug <pod> --target=<container>, kdebug <pod> --copy-to=<name>, kdebug node/<node>
+alias kdebug='kubectl debug -it --image=nicolaka/netshoot --profile=netadmin'
+# A throwaway netshoot pod, deleted on exit
+alias knetshoot='kubectl run netshoot --rm -it --restart=Never --image=nicolaka/netshoot'
+
 # Namespace names, for completion
 function _kube_namespaces { kubectl get namespaces --no-headers -o custom-columns=:metadata.name 2>/dev/null ; }
 

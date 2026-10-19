@@ -34,6 +34,7 @@ shopt -s checkwinsize
 function _complete_alias {
   local name=${COMP_WORDS[0]}
   local expansion=${BASH_ALIASES[$name]}
+  # shellcheck disable=SC2206 # split the expansion into words
   local -a head=($expansion)
   local cmd=${head[0]} spec func prog
   if ! spec=$(complete -p "$cmd" 2>/dev/null); then

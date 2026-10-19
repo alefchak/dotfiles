@@ -1,0 +1,7 @@
+#!/bin/bash
+# Logs the line it is asked to complete and answers a few known prefixes
+echo "COMP_LINE=[$COMP_LINE] COMP_POINT=[$COMP_POINT]" >> "$STATE/aws_completer.log"
+case "${COMP_LINE:0:$COMP_POINT}" in
+  "aws st") echo sts ;;
+  *" --ou") echo --output ;;
+esac

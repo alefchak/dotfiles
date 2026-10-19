@@ -1,0 +1,30 @@
+#!/bin/bash
+# flux backed by files in $STATE/flux:
+#   exists/<kind>/<ns>/<name>   objects in the cluster
+#   inventory                   "<kind>/<ns>/<name> <id> <id> ..." per kustomization, ids as flux writes them
+#   fail                        "<kind>/<ns>/<name>" lines whose reconcile fails
+# Reconciling a kustomization creates everything in its inventory, as applying it would.
+# Without an exists directory every object is taken to exist.
+echo "flux $*" >> "$STATE/calls.log"
+F=$STATE/flux
+
+case "$1" in
+  completion) exit 0 ;;
+  reconcile) ;;
+  *) echo "flux stub: unhandled: $*" >&2; exit 2 ;;
+esac
+
+kind=$2 name=$3 ns=$5
+if [ -d "$F/exists" ] && [ ! -e "$F/exists/$kind/$ns/$name" ]; then
+  echo "✗ $kind \"$name\" not found" >&2; exit 1
+fi
+if grep -qxF "$kind/$ns/$name" "$F/fail" 2>/dev/null; then
+  echo "✗ $kind \"$name\" reconcile failed" >&2; exit 1
+fi
+# shellcheck disable=SC2013 # ids are single words
+for id in $(grep "^$kind/$ns/$name " "$F/inventory" 2>/dev/null | cut -d' ' -f2-); do
+  IFS=_ read -r ins iname _ ikind <<< "$id"
+  case $ikind in Kustomization|HelmRelease) ;; *) continue ;; esac
+  ikind=$(echo "$ikind" | tr '[:upper:]' '[:lower:]')
+  mkdir -p "$F/exists/$ikind/$ins" && touch "$F/exists/$ikind/$ins/$iname"
+done

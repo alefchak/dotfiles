@@ -1,0 +1,9 @@
+#!/bin/bash
+# docker backed by $STATE/containers and $STATE/volumes (one name per line)
+echo "docker $*" >> "$STATE/calls.log"
+case "$1 $2" in
+  "completion bash"|"completion zsh") ;;
+  "ps --format") cat "$STATE/containers" 2>/dev/null ;;
+  "volume ls") cat "$STATE/volumes" 2>/dev/null ;;
+  *) echo "docker stub: unhandled: $*" >&2; exit 2 ;;
+esac

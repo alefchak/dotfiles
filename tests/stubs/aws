@@ -1,0 +1,12 @@
+#!/bin/bash
+# aws backed by $STATE/aws-profiles (one per line). Like the real CLI, any command fails when
+# AWS_PROFILE names an unknown profile.
+echo "aws $*" >> "$STATE/calls.log"
+if [ -n "$AWS_PROFILE" ] && ! grep -qxF -- "$AWS_PROFILE" "$STATE/aws-profiles" 2>/dev/null; then
+  echo "The config profile ($AWS_PROFILE) could not be found" >&2; exit 255
+fi
+case "$1 $2" in
+  "configure list-profiles") cat "$STATE/aws-profiles" 2>/dev/null ;;
+  "sts get-caller-identity") echo '{"Account": "123456789012"}' ;;
+  *) echo "aws stub: unhandled: $*" >&2; exit 2 ;;
+esac

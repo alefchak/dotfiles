@@ -1,0 +1,55 @@
+#!/bin/bash
+# kubectl backed by files in $STATE:
+#   namespaces            one namespace per line
+#   forbidden             namespaces whose lookup is forbidden
+#   offline               if present, namespace lookups fail to connect
+#   context-namespace     the current context's namespace
+#   flux/exists/<kind>/<ns>/<name>, flux/inventory: see the flux stub
+#   flux-objects.json     what fra lists (kustomizations and helmreleases, -A -o json)
+echo "kubectl $*" >> "$STATE/calls.log"
+
+kind_dir() { case $1 in kustomizations*) echo kustomization ;; helmreleases*) echo helmrelease ;; esac; }
+
+case "$1 $2" in
+  "completion bash")
+    # shellcheck disable=SC2016 # bash code for the shell to eval
+    echo '_kubectl_stub() { COMPREPLY=($(compgen -W "get describe" -- "${COMP_WORDS[COMP_CWORD]}")); }'
+    echo 'complete -F _kubectl_stub kubectl' ;;
+  "completion zsh")
+    echo '_kubectl_stub() { compadd get describe; }'
+    echo 'compdef _kubectl_stub kubectl' ;;
+  "get namespaces")
+    cat "$STATE/namespaces" 2>/dev/null ;;
+  "get namespace")
+    if [ -e "$STATE/offline" ]; then
+      echo "Unable to connect to the server: dial tcp: no route to host" >&2; exit 1
+    elif grep -qxF -- "$3" "$STATE/forbidden" 2>/dev/null; then
+      echo "Error from server (Forbidden): namespaces \"$3\" is forbidden" >&2; exit 1
+    elif grep -qxF -- "$3" "$STATE/namespaces" 2>/dev/null; then
+      echo "namespace/$3"
+    else
+      echo "Error from server (NotFound): namespaces \"$3\" not found" >&2; exit 1
+    fi ;;
+  "config view")   # no namespace set prints nothing, as kubectl does
+    cat "$STATE/context-namespace" 2>/dev/null || true ;;
+  "config set-context")
+    echo "${4#--namespace=}" > "$STATE/context-namespace" ;;
+  "get "*,*)
+    cat "$STATE/flux-objects.json" ;;
+  "get kustomizations"*|"get helmreleases"*)
+    kind=$(kind_dir "$2")
+    if [ "${3#-}" != "$3" ]; then   # get <resource> -n NS --no-headers ...: names in a namespace
+      ls "$STATE/flux/exists/$kind/$4" 2>/dev/null
+      exit 0
+    fi
+    name=$3 ns=$5   # get <resource> NAME -n NS -o json: one object with its inventory
+    [ -e "$STATE/flux/exists/$kind/$ns/$name" ] ||
+      { echo "Error from server (NotFound): $2 \"$name\" not found" >&2; exit 1; }
+    ids=$(grep "^$kind/$ns/$name " "$STATE/flux/inventory" 2>/dev/null | cut -d' ' -f2-)
+    printf '{"status":{"inventory":{"entries":['
+    sep=""
+    for id in $ids; do printf '%s{"id":"%s","v":"v1"}' "$sep" "$id"; sep=,; done
+    echo ']}}}' ;;
+  *)
+    echo "kubectl stub: unhandled: $*" >&2; exit 2 ;;
+esac

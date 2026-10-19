@@ -1,0 +1,42 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux runs the bash >= 4 tests; macOS has the stock bash 3.2
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+      - name: Install bats
+        run: |
+          git clone --depth 1 --branch v1.14.0 https://github.com/bats-core/bats-core.git "$RUNNER_TEMP/bats"
+          sudo "$RUNNER_TEMP/bats/install.sh" /usr/local
+      - name: Show versions
+        # The tests only put /usr/bin and /bin on PATH, so jq and python3 must be there
+        run: |
+          bats --version
+          bash --version | head -1
+          zsh --version
+          /usr/bin/jq --version
+          /usr/bin/python3 --version
+      - run: bats tests
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck --version
+      - run: tests/lint

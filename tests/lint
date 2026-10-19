@@ -1,0 +1,4 @@
+#!/bin/bash
+# Lint the bash and shared dotfiles and the test harness (the zsh files are not bash)
+cd "$(dirname "$0")/.." || exit
+shellcheck bash/.bashrc ./*/.bash/* ./*/.aliases/* tests/helpers.bash tests/stubs/* tests/lint

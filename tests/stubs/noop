@@ -1,0 +1,3 @@
+#!/bin/bash
+# A tool that exists and does nothing; logs how it was called
+echo "$(basename "$0") $*" >> "$STATE/calls.log"

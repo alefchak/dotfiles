@@ -101,6 +101,7 @@ function fra {
           end)
       | .rows[] | @tsv') || return 1
   while read -r kind name ns flag force; do
+    # shellcheck disable=SC2086 # unquoted so that an empty flag is dropped
     flux reconcile "$kind" "$name" -n "$ns" $flag $force || { echo "fra: stopped at $kind $ns/$name" >&2; return 1; }
     count=$((count + 1)); last="$kind $ns/$name"
   done <<< "$chain"

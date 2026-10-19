@@ -1,0 +1,8 @@
+#!/bin/bash
+# terraform, tofu and terragrunt complete themselves: bash runs them with COMP_LINE set.
+# Answers "pl" with "plan"; otherwise logs how it was called.
+if [ -n "$COMP_LINE" ]; then
+  case "${COMP_LINE:0:$COMP_POINT}" in *" pl") echo plan ;; esac
+  exit 0
+fi
+echo "$(basename "$0") $*" >> "$STATE/calls.log"

@@ -1,0 +1,9 @@
+# The checked files are sourced by bash (and the shared ones by zsh too), so they have no shebang
+shell=bash
+
+# Completion functions fill COMPREPLY=($(compgen ...)). The suggested mapfile is missing from
+# bash 3.2 (macOS), and the candidates (namespaces, profiles, volumes) never contain spaces.
+disable=SC2207
+
+# Sourced paths are system files or the dotfiles themselves, not inputs to check
+disable=SC1090,SC1091

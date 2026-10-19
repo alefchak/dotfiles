@@ -10,10 +10,11 @@ setup() {
 
 @test "bash: simple aliases complete through _complete_alias, others do not" {
   skip_unless_bash4
-  sh_run bash 'complete -p k awswho; complete -p pull || echo "pull: none"'
+  sh_run bash 'complete -p k awswho'
   assert_eq "$(normalize_specs "$output")" "complete -o bashdefault -o default -F _complete_alias k
-complete -o bashdefault -o default -F _complete_alias awswho
-pull: none"
+complete -o bashdefault -o default -F _complete_alias awswho"
+  sh_run bash 'complete -p pull'   # expands to a && list
+  [ "$status" -ne 0 ]
 }
 
 @test "bash: _complete_alias forwards to a completion function" {

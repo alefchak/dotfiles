@@ -7,6 +7,20 @@ alias kdeletefailed='kubectl delete pods --field-selector="status.phase!=Succeed
 # Namespace names, for completion
 function _kube_namespaces { kubectl get namespaces --no-headers -o custom-columns=:metadata.name 2>/dev/null ; }
 
+# kns sets the namespace of the current context; with no argument it prints it
+function kns {
+  local ns err
+  if [ -z "$1" ]; then
+    ns=$(kubectl config view --minify -o jsonpath='{..namespace}') || return 1
+    echo "${ns:-default}"
+    return
+  fi
+  # refuse only a namespace the cluster says is missing, so it still works without access to namespaces
+  err=$(kubectl get namespace "$1" -o name 2>&1 >/dev/null)
+  case "$err" in *NotFound*) echo "kns: no such namespace: $1" >&2; return 1 ;; esac
+  kubectl config set-context --current --namespace="$1" >/dev/null
+}
+
 function kgetall {
   [ -n "$1" ] || { echo "usage: kgetall <namespace>" >&2; return 1; }
   for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events" | sort -u); do

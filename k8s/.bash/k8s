@@ -1,5 +1,6 @@
 command -v kubectl >/dev/null 2>&1 && {
     eval "$(kubectl completion bash)"
-    function _kgetall { [[ $COMP_CWORD -eq 1 ]] && COMPREPLY=($(compgen -W "$(_kube_namespaces)" -- "${COMP_WORDS[1]}")) ; }
-    complete -F _kgetall kgetall
+    function _kube_ns_arg { [[ $COMP_CWORD -eq 1 ]] && COMPREPLY=($(compgen -W "$(_kube_namespaces)" -- "${COMP_WORDS[1]}")) ; }
+    complete -F _kube_ns_arg kgetall
+    complete -F _kube_ns_arg kns
 }

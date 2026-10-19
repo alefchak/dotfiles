@@ -1,6 +1,7 @@
 alias gaa='git add -A'
 alias gup='git up'
 alias push='git push'
+alias gpf='git pushf'
 alias pull='git pull -p --autostash && git gone'
 alias gm='git commit -m'
 alias gma='git commit -am'

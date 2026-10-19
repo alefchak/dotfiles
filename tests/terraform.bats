@@ -26,7 +26,7 @@ check_tf_falls_back() {
 @test "bash: each tool and alias completes through its own binary" {
   stub_as tfcompleter tofu terraform terragrunt
   sh_run bash 'complete -p terraform tofu terragrunt tf tg'
-  assert_eq "$output" "complete -o nospace -C terraform terraform
+  assert_eq "$(normalize_specs "$output")" "complete -o nospace -C terraform terraform
 complete -o nospace -C tofu tofu
 complete -o nospace -C terragrunt terragrunt
 complete -o nospace -C tofu tf

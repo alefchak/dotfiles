@@ -69,3 +69,15 @@ assert_eq() {
 # instead, so zsh completion functions can be called directly. Prepend it to a zsh snippet.
 # shellcheck disable=SC2016,SC2034 # zsh code, used by the .bats files
 ZSH_COMPADD='compadd() { [[ $1 == -- ]] && shift; print -rl -- "$@"; };'
+
+# normalize_specs <complete -p output>: bash 5.2 quotes -C commands and orders -o options unlike
+# 3.2, so print each spec with quotes removed and its -o options sorted
+normalize_specs() {
+  local line opts rest
+  while IFS= read -r line; do
+    line=${line//\'/}
+    opts=$(grep -oE -- '-o [a-z]+' <<< "$line" | sort | tr '\n' ' ')
+    rest=$(sed -E 's/ -o [a-z]+//g; s/^complete //' <<< "$line")
+    echo "complete ${opts}${rest}"
+  done <<< "$1"
+}

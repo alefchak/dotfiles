@@ -7,15 +7,18 @@ setup() {
   printf 'pgdata\nuploads\n' > "$STATE/volumes"
 }
 
-@test "bash: dbash completes containers, dvbackup volumes, dvrestore archives" {
+@test "bash: dbash, dvbackup and dvrestore have completion" {
+  sh_run bash 'complete -p dbash dvbackup dvrestore'
+  assert_eq "$(normalize_specs "$output")" "complete -F _dbash dbash
+complete -F _dvbackup dvbackup
+complete -o plusdirs -f -X !*.tar.gz dvrestore"
+}
+
+@test "bash: dbash completes containers and dvbackup volumes" {
   sh_run bash '
-    complete -p dbash dvbackup dvrestore
     COMP_WORDS=(dbash w); COMP_CWORD=1; _dbash; echo "[${COMPREPLY[*]}]"
     COMP_WORDS=(dvbackup u); COMP_CWORD=1; _dvbackup; echo "[${COMPREPLY[*]}]"'
-  assert_eq "$output" "complete -F _dbash dbash
-complete -F _dvbackup dvbackup
-complete -o plusdirs -f -X '!*.tar.gz' dvrestore
-[web worker]
+  assert_eq "$output" "[web worker]
 [uploads]"
 }
 

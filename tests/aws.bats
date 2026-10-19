@@ -64,7 +64,7 @@ staging
 
 @test "bash: aws completes through aws_completer" {
   sh_run bash 'complete -p aws'
-  assert_eq "$output" "complete -C aws_completer aws"
+  assert_eq "$(normalize_specs "$output")" "complete -C aws_completer aws"
 }
 
 @test "zsh: Tab on aws completes through aws_completer" {

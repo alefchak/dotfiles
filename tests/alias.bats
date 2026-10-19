@@ -11,8 +11,8 @@ setup() {
 @test "bash: simple aliases complete through _complete_alias, others do not" {
   skip_unless_bash4
   sh_run bash 'complete -p k awswho; complete -p pull || echo "pull: none"'
-  assert_eq "$output" "complete -o default -o bashdefault -F _complete_alias k
-complete -o default -o bashdefault -F _complete_alias awswho
+  assert_eq "$(normalize_specs "$output")" "complete -o bashdefault -o default -F _complete_alias k
+complete -o bashdefault -o default -F _complete_alias awswho
 pull: none"
 }
 

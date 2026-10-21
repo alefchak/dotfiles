@@ -26,10 +26,11 @@ function kns {
   kubectl config set-context --current --namespace="$1" >/dev/null
 }
 
+# kgetall <namespace>: everything in a namespace, one table per type, with each row named
+# <type>/<name>. One kubectl call for all types, so no --sort-by: it fails across types.
 function kgetall {
   [ -n "$1" ] || { echo "usage: kgetall <namespace>" >&2; return 1; }
-  for i in $(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events" | sort -u); do
-    echo "Resource: $i"
-    kubectl -n "$1" get --ignore-not-found "$i" --sort-by=.metadata.creationTimestamp
-  done
+  local types
+  types=$(kubectl api-resources --verbs=list --namespaced -o name | grep -v "events" | sort -u | paste -sd, -)
+  kubectl get "$types" -n "$1" --ignore-not-found
 }

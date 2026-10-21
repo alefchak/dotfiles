@@ -38,6 +38,19 @@ check_kgetall_usage() {
 @test "bash: kgetall needs a namespace" { check_kgetall_usage bash; }
 @test "zsh: kgetall needs a namespace" { check_kgetall_usage zsh; }
 
+check_kgetall() {
+  printf 'pods\nevents\nservices\nevents.events.k8s.io\ndeployments.apps\npods\n' > "$STATE/api-resources"
+  printf 'NAME      READY\npod/web   1/1\n' > "$STATE/get-output"
+  sh_run "$1" 'kgetall apps'
+  [ "$status" -eq 0 ]
+  assert_eq "$output" "NAME      READY
+pod/web   1/1"
+  # one get for every type but events, each once
+  assert_eq "$(grep '^kubectl get' "$STATE/calls.log")" "kubectl get deployments.apps,pods,services -n apps --ignore-not-found"
+}
+@test "bash: kgetall gets every type in one call" { check_kgetall bash; }
+@test "zsh: kgetall gets every type in one call" { check_kgetall zsh; }
+
 @test "bash: kns and kgetall complete namespaces, first argument only" {
   sh_run bash '
     for cmd in kns kgetall; do

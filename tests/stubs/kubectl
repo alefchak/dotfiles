@@ -6,6 +6,8 @@
 #   context-namespace     the current context's namespace
 #   flux/exists/<kind>/<ns>/<name>, flux/inventory: see the flux stub
 #   flux-objects.json     what fra lists (kustomizations and helmreleases, -A -o json)
+#   api-resources         namespaced resource types, one per line
+#   get-output            what a get of several types in one namespace prints
 echo "kubectl $*" >> "$STATE/calls.log"
 
 kind_dir() { case $1 in kustomizations*) echo kustomization ;; helmreleases*) echo helmrelease ;; esac; }
@@ -37,7 +39,11 @@ case "$1 $2" in
   "config set-context")
     echo "${4#--namespace=}" > "$STATE/context-namespace" ;;
   "get "*,*)
-    cat "$STATE/flux-objects.json" ;;
+    if [ "$3" = -A ]; then cat "$STATE/flux-objects.json"   # fra: flux objects in all namespaces
+    else cat "$STATE/get-output"                           # kgetall: several types in one namespace
+    fi ;;
+  "api-resources --verbs=list")
+    cat "$STATE/api-resources" ;;
   "get kustomizations"*|"get helmreleases"*)
     kind=$(kind_dir "$2")
     if [ "${3#-}" != "$3" ]; then   # get <resource> -n NS --no-headers ...: names in a namespace

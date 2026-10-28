@@ -35,6 +35,10 @@
 - A change contains only what was asked. Raise adjacent risks in the reply; don't fold unrequested fixes in.
 - When a failure is reported without its output, ask for the exact error text before presenting a diagnosis.
 - Before saying you lack a permission on a host, test it on that host (e.g. `ssh <host> sudo -n true`) and quote the result. A failure on one host says nothing about another.
+- For a cleanup request, establish the goal first (space saved, minimal persisted state, or backup scope) before ranking options.
+- Before a bulk delete, list what it removes and which entries come back on their own, and protect anything else depends on.
+- Before recommending a change to an auth or security setting, read how the app interprets the new value (empty, null, default).
+- To show two setups are equivalent, run the same user-facing inputs in both rather than comparing files.
 
 # Workflow
 

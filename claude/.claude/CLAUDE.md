@@ -20,6 +20,7 @@
 # Git
 
 - No co-author lines in commits.
+- Never open a PR without my explicit permission, and don't present a "create PR" link as the next step. Pushing a branch is fine; ask "want a PR?" if one seems useful.
 
 # Tooling
 
@@ -31,6 +32,9 @@
 - Fix bugs in-place when found. Don't defer unless genuinely blocked.
 - Never assume — read code, verify, cite file:line references.
 - No "good enough" — raise known issues, fix them.
+- A change contains only what was asked. Raise adjacent risks in the reply; don't fold unrequested fixes in.
+- When a failure is reported without its output, ask for the exact error text before presenting a diagnosis.
+- Before saying you lack a permission on a host, test it on that host (e.g. `ssh <host> sudo -n true`) and quote the result. A failure on one host says nothing about another.
 
 # Workflow
 
@@ -60,6 +64,7 @@
 
 - After ANY correction from the user: update `tasks/lessons.md` with the pattern.
 - Write rules that prevent the same mistake.
+- A lesson that applies beyond one project goes in this file instead.
 - Review lessons at session start for the relevant project.
 
 # Core Principles

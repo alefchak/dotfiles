@@ -2,8 +2,8 @@
 
 usage: tab.py <bash|zsh> <text>
 
-Runs the shell in a pseudo-terminal, binds Ctrl-X to write the line buffer to a file, types the
-text, Tab, then Ctrl-X. Keys are handled in order, so the file is written once completion is done.
+Runs the shell in a pseudo-terminal, binds Ctrl-T to write the line buffer to a file, types the
+text, Tab, then Ctrl-T. Keys are handled in order, so the file is written once completion is done.
 Waits on the prompt and the file rather than on fixed delays.
 """
 
@@ -23,10 +23,10 @@ def main():
     dump = os.path.join(tempfile.mkdtemp(), "line")
     # The prompt is split in the command so its echo cannot be mistaken for the prompt itself
     if shell == "zsh":
-        setup = ('dumpbuf() { print -r -- "$BUFFER" > %s }; zle -N dumpbuf; bindkey "^X" dumpbuf; '
+        setup = ('dumpbuf() { print -r -- "$BUFFER" > %s }; zle -N dumpbuf; bindkey "^T" dumpbuf; '
                  "PS1='TAB''READY> '\n" % dump)
     else:
-        setup = ('dumpbuf() { printf "%%s\\n" "$READLINE_LINE" > %s; }; bind -x \'"\\C-x": dumpbuf\'; '
+        setup = ('dumpbuf() { printf "%%s\\n" "$READLINE_LINE" > %s; }; bind -x \'"\\C-t": dumpbuf\'; '
                  "PS1='TAB''READY> '\n" % dump)
 
     pid, fd = pty.fork()
@@ -52,7 +52,7 @@ def main():
     try:
         os.write(fd, setup.encode())
         read_until(lambda: b"TABREADY> " in output)
-        os.write(fd, text.encode() + b"\t\x18")
+        os.write(fd, text.encode() + b"\t\x14")
         read_until(lambda: os.path.exists(dump) and open(dump).read().endswith("\n"))
         with open(dump) as f:
             sys.stdout.write(f.read())

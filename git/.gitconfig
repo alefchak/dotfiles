@@ -7,7 +7,6 @@
 	ec = config --global -e
 	up = !git pull --rebase --prune
 	pushf = push --force-with-lease
-	gone = "!git for-each-ref --format='%(if:equals=[gone])%(upstream:track)%(then)%(refname:short)%(end)' refs/heads | grep . | while read -r b; do git branch -D \"$b\"; done"
 [push]
 	autoSetupRemote = true
 	# --force-with-lease also refuses commits only a background fetch has seen

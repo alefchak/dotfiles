@@ -1,0 +1,25 @@
+#!/bin/bash
+# git gone: delete local branches whose upstream branch is gone, unless they hold changes their
+# remote's default branch doesn't have. Git runs any git-<name> on PATH as `git <name>`.
+#
+# A branch is safe to delete when merging it into <remote>/HEAD changes nothing: it was merged,
+# rebased or squash-merged. Merges are done in memory (git merge-tree, git >= 2.38).
+
+while read -r branch remote; do
+  [ -n "$branch" ] || continue
+  if ! base=$(git rev-parse --abbrev-ref --verify -q "$remote/HEAD"); then
+    echo "Kept $branch: $remote/HEAD is not set (git remote set-head $remote -a)"
+    continue
+  fi
+  merged=$(git merge-tree --write-tree "$base" "$branch" 2>/dev/null)
+  case $? in
+    0|1) ;;   # 1: the merge conflicts
+    *) echo "Kept $branch: could not compare with $base (needs git >= 2.38)"; continue ;;
+  esac
+  if [ "$merged" = "$(git rev-parse "$base^{tree}")" ]; then
+    git branch -D "$branch"
+  else
+    echo "Kept $branch: has changes not in $base"
+  fi
+done < <(git for-each-ref refs/heads \
+  --format='%(if:equals=[gone])%(upstream:track)%(then)%(refname:short) %(upstream:remotename)%(end)')

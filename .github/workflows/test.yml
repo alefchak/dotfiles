@@ -38,6 +38,30 @@ jobs:
           /usr/bin/python3 --version
       - run: bats tests
 
+  rhel8:
+    # Rocky 8.10 rebuilds RHEL 8.10, the last RHEL 8: the oldest bash, zsh and git supported here
+    runs-on: ubuntu-latest
+    container: rockylinux/rockylinux:8.10
+    steps:
+      - name: Install tools
+        # git first, so checkout clones instead of downloading a tarball
+        run: dnf install -y git zsh jq python3
+      - uses: actions/checkout@v5
+      - name: Install bats
+        run: |
+          git clone --depth 1 --branch v1.14.0 https://github.com/bats-core/bats-core.git "$RUNNER_TEMP/bats"
+          "$RUNNER_TEMP/bats/install.sh" /usr/local
+      - name: Show versions
+        run: |
+          cat /etc/redhat-release
+          bats --version
+          bash --version | head -1
+          zsh --version
+          git --version
+          /usr/bin/jq --version
+          /usr/bin/python3 --version
+      - run: bats tests
+
   lint:
     runs-on: ubuntu-latest
     steps:

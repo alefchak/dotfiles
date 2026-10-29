@@ -1,9 +1,32 @@
 # dotfiles
 
-## Setup (macOS)
+## Platforms
+
+Everything must work in both bash and zsh on:
+
+- RHEL 8
+- Windows WSL
+- modern Ubuntu
+- modern macOS
+
+CI runs the tests on ubuntu-latest, macos-latest and Rocky Linux 8.10 (a RHEL 8 rebuild). WSL runs Ubuntu
+by default, so the Ubuntu job covers it; behavior specific to WSL (Windows paths, the clipboard) is not
+tested.
+
+## Setup
+
+macOS:
 
 ```sh
 brew bundle          # tools these dotfiles use, plus this machine's extras
+```
+
+Linux and WSL: install `stow` and the tools you want with the system package manager (on RHEL 8, `stow`
+is in EPEL).
+
+Then, on any platform:
+
+```sh
 stow <package>...    # e.g. stow zsh common git k8s
 ```
 

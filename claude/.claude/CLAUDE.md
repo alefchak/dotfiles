@@ -71,6 +71,8 @@
 - Write rules that prevent the same mistake.
 - A lesson that applies beyond one project goes in this file instead.
 - Review lessons at session start for the relevant project.
+- Standing decisions on something go in `tasks/decisions.md`, with the date and reason, created only when a repo has one.
+- Read `tasks/decisions.md` at session start. Don't raise those items again unless the facts change.
 
 # Core Principles
 

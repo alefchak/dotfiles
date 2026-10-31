@@ -47,6 +47,7 @@
 - Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions).
 - Write the plan to `tasks/todo.md` with checkable items. This is the single source of truth for task tracking.
 - `tasks/` is local-only: before creating it in a repo, add `/tasks/` to that repo's `.git/info/exclude` unless the repo already ignores it.
+- `tasks/` is local-only and absent from worktrees. From a worktree session, you may update `*.md` files in the main checkout's `tasks/` with shell commands (the Edit tool is blocked there). This covers only those files, and each edit must be targeted, never a whole-file rewrite.
 - Check in with the user before starting implementation.
 - If something goes sideways, STOP and re-plan immediately — don't keep pushing.
 

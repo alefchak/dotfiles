@@ -17,9 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-      - name: Install zsh
+      - name: Install zsh and bash-completion
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh bash-completion
       - name: Secure zsh's completion directories
         # compinit refuses group- or world-writable directories and the runner image has some
         if: runner.os == 'Linux'
@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Install tools
         # git first, so checkout clones instead of downloading a tarball
-        run: dnf install -y git zsh jq python3
+        run: dnf install -y git zsh jq python3 bash-completion
       - uses: actions/checkout@v5
       - name: Install bats
         run: |

@@ -3,7 +3,9 @@
 # remote's default branch doesn't have. Git runs any git-<name> on PATH as `git <name>`.
 #
 # A branch is safe to delete when merging it into <remote>/HEAD changes nothing: it was merged,
-# rebased or squash-merged. Merges are done in memory (git merge-tree, git >= 2.38).
+# rebased or squash-merged. Merges are done in memory (git merge-tree, git >= 2.38; Rocky/RHEL 8.10
+# has 2.43.7, older RHEL 8 point releases are unchecked). Git < 2.48 doesn't set <remote>/HEAD on
+# fetch; without it, branches are kept and the fix is printed.
 
 while read -r branch remote; do
   [ -n "$branch" ] || continue

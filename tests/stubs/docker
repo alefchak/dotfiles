@@ -1,8 +1,10 @@
 #!/bin/bash
-# docker backed by $STATE/containers and $STATE/volumes (one name per line)
+# docker backed by $STATE/containers and $STATE/volumes (one name per line). exec -i -t <name> sh -c
+# <script> runs the script with $STATE/container-bin as the whole PATH: the container's commands.
 echo "docker $*" >> "$STATE/calls.log"
 case "$1 $2" in
   "completion bash"|"completion zsh") ;;
+  "exec -i") PATH=$STATE/container-bin /bin/sh -c "$7" ;;
   "ps --format") cat "$STATE/containers" 2>/dev/null ;;
   "volume ls") cat "$STATE/volumes" 2>/dev/null ;;
   *) echo "docker stub: unhandled: $*" >&2; exit 2 ;;

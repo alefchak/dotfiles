@@ -7,6 +7,28 @@ setup() {
   printf 'pgdata\nuploads\n' > "$STATE/volumes"
 }
 
+# container_has bash sh: commands in the container, each printing its name when run
+container_has() {
+  mkdir -p "$STATE/container-bin"
+  local c
+  for c; do
+    printf '#!/bin/sh\necho "ran %s"\n' "$c" > "$STATE/container-bin/$c"
+    chmod +x "$STATE/container-bin/$c"
+  done
+}
+
+check_dbash() {
+  container_has "$2" sh
+  sh_run "$1" 'dbash web'
+  [ "$status" -eq 0 ]
+  assert_eq "$output" "ran $2"
+  [[ $(cat "$STATE/calls.log") == *"docker exec -i -t web sh -c "* ]]
+}
+@test "bash: dbash opens bash when the container has it" { check_dbash bash bash; }
+@test "zsh: dbash opens bash when the container has it" { check_dbash zsh bash; }
+@test "bash: dbash falls back to sh" { check_dbash bash sh; }
+@test "zsh: dbash falls back to sh" { check_dbash zsh sh; }
+
 @test "bash: dbash, dvbackup and dvrestore have completion" {
   sh_run bash 'complete -p dbash dvbackup dvrestore'
   assert_eq "$(normalize_specs "$output")" "complete -F _dbash dbash

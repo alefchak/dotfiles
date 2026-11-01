@@ -103,8 +103,10 @@ check_gone_no_remote_head() {
   assert_eq "$output" "[git diff --cached --ca] 22 3 [git diff --cached --ca] git --ca --cached"
 }
 
-# Real Tab presses reach the completion the system ships for git
+# Real Tab presses reach the completion the system ships for git. In a repo, because git status
+# can't list its options outside one.
 check_tab_git_alias() {
+  git init -q "$HOME_DIR"
   run tab "$1" 'gd --cach';  assert_eq "$output" "gd --cached "
   run tab "$1" 'gs --shor';  assert_eq "$output" "gs --short "
 }

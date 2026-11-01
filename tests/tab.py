@@ -4,6 +4,7 @@ usage: tab.py <bash|zsh> <text>
 
 Runs the shell in a pseudo-terminal, binds Ctrl-T to write the line buffer to a file, types the
 text, Tab, then Ctrl-T. Keys are handled in order, so the file is written once completion is done.
+Ctrl-T rather than Ctrl-X: bash 4.4 can't run a `bind -x` command on a prefix key.
 Waits on the prompt and the file rather than on fixed delays.
 """
 

@@ -80,3 +80,38 @@ check_gone_no_remote_head() {
 }
 @test "bash: git gone keeps every branch when origin/HEAD is not set" { check_gone_no_remote_head bash; }
 @test "zsh: git gone keeps every branch when origin/HEAD is not set" { check_gone_no_remote_head zsh; }
+
+@test "bash: plain git aliases complete through _complete_alias, others do not" {
+  skip_unless_bash4
+  local a
+  for a in gaa gup push gpf gm gma gd gdt gdc gs gamend grewind gclean others; do
+    sh_run bash "complete -p $a"
+    assert_eq "$(normalize_specs "$output")" "complete -o bashdefault -o default -F _complete_alias $a"
+  done
+  for a in pull gg gk pullall gcall comall; do
+    sh_run bash "complete -p $a"
+    [ "$status" -ne 0 ]
+  done
+}
+
+@test "bash: a git alias hands git's completion the expanded line" {
+  skip_unless_bash4
+  sh_run bash '
+    _git_stub() { echo "[$COMP_LINE] $COMP_POINT $COMP_CWORD [${COMP_WORDS[*]}] $*"; }
+    complete -F _git_stub git
+    COMP_WORDS=(gdc --ca); COMP_CWORD=1; COMP_LINE="gdc --ca"; COMP_POINT=8; _complete_alias'
+  assert_eq "$output" "[git diff --cached --ca] 22 3 [git diff --cached --ca] git --ca --cached"
+}
+
+# Real Tab presses reach the completion the system ships for git
+check_tab_git_alias() {
+  run tab "$1" 'gd --cach';  assert_eq "$output" "gd --cached "
+  run tab "$1" 'gs --shor';  assert_eq "$output" "gs --short "
+}
+@test "bash: Tab completes git aliases with the system's git completion" {
+  skip_unless_bash4
+  [ -f /usr/share/bash-completion/bash_completion ] && [ -f /usr/share/bash-completion/completions/git ] ||
+    skip "needs bash-completion and its git completion"
+  check_tab_git_alias bash
+}
+@test "zsh: Tab completes git aliases with the system's git completion" { check_tab_git_alias zsh; }
